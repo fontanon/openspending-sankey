@@ -28,37 +28,46 @@ trim <- function(x) gsub("^[[:space:]]+|[[:space:]]+$", "", x)
 
 # Load data and aggregate data
 # ============================
-UGRSpending <- read.csv2('ugr-estado-gastos-2013.csv', sep=',')
-UGRIncome <- read.csv2('ugr-estado-ingresos-2013.csv', sep=',')
+library("rjson")
 
-# Aggregate amounts by income_article, spending program and spending chapter
-income_article <- aggregate(cantidad ~ articulo, data=UGRIncome, FUN="sum")
-spending_program <- aggregate(cantidad ~ programa, data=UGRSpending, FUN="sum")
-spending_cap <- aggregate(cantidad ~ programa + capitulo, data=UGRSpending, FUN="sum")
+json_cofog1_url <- "http://openspending.org/api/2/aggregate?dataset=ukgov-finances-cra&cut=time.year:2010&drilldown=cofog1"
+json_cofog1_data <- fromJSON(file=json_cofog1_url, method="C")
+cofog1 <- data.frame(cbind(
+  "UKGov", 
+  matrix(sapply(sapply(json_cofog1_data$drilldown, "[", c(3)), "[", c(5))), 
+  matrix(sapply(json_cofog1_data$drilldown, "[", c(1)))
+))
+names(cofog1) <- c("source", "target", "value")
 
-# Adding Universidad as source and target
-income_article$new_col <- "Universidad de Granada"
-spending_program$new_col <- "Universidad de Granada"
+json_cofog2_url <- "http://openspending.org/api/2/aggregate?dataset=ukgov-finances-cra&cut=time.year:2010&drilldown=cofog1|cofog2"
+json_cofog2_data <- fromJSON(file=json_cofog2_url, method="C")
+cofog2 <- data.frame(cbind(
+  matrix(sapply(sapply(json_cofog2_data$drilldown, "[", c(4)), "[", c(5))), 
+  matrix(sapply(sapply(json_cofog2_data$drilldown, "[", c(3)), "[", c(5))), 
+  matrix(sapply(json_cofog2_data$drilldown, "[", c(1)))
+))
+names(cofog2) <- c("source", "target", "value")
 
-# Rearrange datasets
-names(income_article) <- c("source","value","target")
-names(spending_program) <- c("target","value","source")
-names(spending_cap) <- c("source", "target", "value")
-
-income_article <- income_article[, c(1,3,2)]
-spending_program <- spending_program[, c(3,1,2)]
+json_cofog3_url <- "http://openspending.org/api/2/aggregate?dataset=ukgov-finances-cra&cut=time.year:2010&drilldown=cofog2|cofog3"
+json_cofog3_data <- fromJSON(file=json_cofog3_url, method="C")
+cofog3 <- data.frame(cbind(
+  matrix(sapply(sapply(json_cofog3_data$drilldown, "[", c(3)), "[", c(5))), 
+  matrix(sapply(sapply(json_cofog3_data$drilldown, "[", c(4)), "[", c(5))), 
+  matrix(sapply(json_cofog3_data$drilldown, "[", c(1)))
+))
+names(cofog3) <- c("source", "target", "value")
 
 # Producing nodes and links D3.js JSON data
 # ===========================================
   
 # Initialization of D3.js nodes dataframe
-nodes <- union("Universidad de Granada", union(income_article$source,union(spending_program$target, spending_cap$target)))
-nodes <- data.frame(seq(1:length(nodes)), nodes)
+nodes <- union("UKGOV", union(cofog1$target,union(cofog2$target, cofog3$target)))
+nodes <- data.frame(cbind(seq(1:length(nodes)), nodes))
 names(nodes) <- c("cod", "name")
 nodes$name <- trim(nodes$name)
 
 # Initialization of D3.js links dataframe
-links <- rbind(income_article, spending_program, spending_cap)
+links <- rbind(cofog1, cofog2, cofog3)
 links$source <- trim(links$source)
 links$target <- trim(links$target)
 
@@ -77,4 +86,4 @@ names(nodes) <- c("name")
 # Output to JSON D3.js compatible format
 output <- paste('{"nodes":', toJSONarray(nodes), ',')
 output <- paste(output, '"links":', toJSONarray(links), '}')
-write(output, "ugr-sankey.json")
+write(output, "openspending.json")
