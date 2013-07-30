@@ -90,4 +90,4 @@ names(nodes) <- c("name")
 # Output to JSON D3.js compatible format
 output <- paste('{"nodes":', toJSONarray(nodes), ',')
 output <- paste(output, '"links":', toJSONarray(links), '}')
-write(output, "openspending.json")
+write(output, "ukgov-finances-cra.json")
