@@ -26,10 +26,12 @@ toJSONarray = function(dtf){
 # Trim whitespaces
 trim <- function(x) gsub("^[[:space:]]+|[[:space:]]+$", "", x)
 
-# Load data and aggregate data
-# ============================
+# Load data from OpenSpending API (ukgov-finances-cra dataset used)
+# =================================================================
+
 library("rjson")
 
+# COFOG1 breakdown data
 json_cofog1_url <- "http://openspending.org/api/2/aggregate?dataset=ukgov-finances-cra&cut=time.year:2010&drilldown=cofog1"
 json_cofog1_data <- fromJSON(file=json_cofog1_url, method="C")
 cofog1 <- data.frame(cbind(
@@ -39,6 +41,7 @@ cofog1 <- data.frame(cbind(
 ))
 names(cofog1) <- c("source", "target", "value")
 
+# COFOG2 breakdown data
 json_cofog2_url <- "http://openspending.org/api/2/aggregate?dataset=ukgov-finances-cra&cut=time.year:2010&drilldown=cofog1|cofog2"
 json_cofog2_data <- fromJSON(file=json_cofog2_url, method="C")
 cofog2 <- data.frame(cbind(
@@ -48,6 +51,7 @@ cofog2 <- data.frame(cbind(
 ))
 names(cofog2) <- c("source", "target", "value")
 
+# COFOG3 breakdown data
 json_cofog3_url <- "http://openspending.org/api/2/aggregate?dataset=ukgov-finances-cra&cut=time.year:2010&drilldown=cofog2|cofog3"
 json_cofog3_data <- fromJSON(file=json_cofog3_url, method="C")
 cofog3 <- data.frame(cbind(
