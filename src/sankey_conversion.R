@@ -66,6 +66,7 @@ names(cofog3) <- c("source", "target", "value")
   
 # Initialization of D3.js nodes dataframe
 nodes <- union("UKGOV", union(cofog1$target,union(cofog2$target, cofog3$target)))
+nodes <- Filter(function(i) {i!="Unknown"}, nodes)
 nodes <- data.frame(cbind(seq(1:length(nodes)), nodes))
 names(nodes) <- c("cod", "name")
 nodes$name <- trim(nodes$name)
@@ -74,6 +75,8 @@ nodes$name <- trim(nodes$name)
 links <- rbind(cofog1, cofog2, cofog3)
 links$source <- trim(links$source)
 links$target <- trim(links$target)
+links <- subset(links, source != "Unknown")
+links <- subset(links, target != "Unknown")
 
 # Here comes the magic: merging datasets for replacing names with codes
 links <- merge(links, nodes, by.x="source", by.y="name")
